@@ -4,10 +4,10 @@
 
 - `/ping` command
 - `/set-settings` command
+- `/challenge-create` command
 
 ## 📌 TODO
 
-- `/challenge-create` command
 - `/challenge-edit` command
 - `/complete-challenge` command
 - `/derank` command
