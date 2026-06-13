@@ -1,0 +1,6 @@
+out/*
+.vs/*
+*.exe
+CMakeSettings.json
+config.json
+build/*

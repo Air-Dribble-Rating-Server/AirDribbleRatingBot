@@ -1,0 +1,68 @@
+{
+    "grounddweller": {
+        "name": "Ground Dweller",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "beginner": {
+        "name": "Beginner",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "apprentice": {
+        "name": "Apprentice",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "intermediate": {
+        "name": "Intermediate",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "advanced": {
+        "name": "Advanced",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "expert": {
+        "name": "Expert",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "master": {
+        "name": "Master",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "legend": {
+        "name": "Legend",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "mythic": {
+        "name": "Mythic",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "demigod": {
+        "name": "Demigod",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "players": []
+    },
+    "airdribblegod": {
+        "name": "Air Dribble God",
+        "ratingNeeded": 0.0,
+        "roleID": null,
+        "player": null
+    }
+}
