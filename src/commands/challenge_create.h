@@ -81,13 +81,10 @@ public:
         std::string url1        = normalize_url(std::get<std::string>(event.get_parameter("url1")));
         std::string url2;
         bool        has_url2    = false;
+        if (auto url2_param = event.get_parameter("url2"); auto* url2_value = std::get_if<std::string>(&url2_param))
         {
-            auto url2_param = event.get_parameter("url2");
-            if (std::holds_alternative<std::string>(url2_param))
-            {
-                url2     = normalize_url(std::get<std::string>(url2_param));
-                has_url2 = true;
-            }
+            url2     = normalize_url(*url2_value);
+            has_url2 = true;
         }
 
         if (subcmd == "normal")
