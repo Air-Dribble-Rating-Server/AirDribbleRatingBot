@@ -52,7 +52,7 @@ void CommandHandler::on_slash_command(const dpp::slashcommand_t& event)
                 auto result = cmd->execute(event);
                 if (result)
                 {
-                    event.edit_response(result.value());  // result.value() es un dpp::message
+                    event.edit_response(result.value());  // result.value() is a dpp::message
                 }
                 else
                 {
