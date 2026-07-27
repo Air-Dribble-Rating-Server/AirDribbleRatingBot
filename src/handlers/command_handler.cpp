@@ -4,6 +4,7 @@
 #include "../commands/ping.h"
 #include "../commands/set_settings.h"
 #include "../commands/challenge_create.h"
+#include "../commands/challenge_edit.h"
 
 CommandHandler::CommandHandler(dpp::cluster& bot_ref) : bot(bot_ref)
 {
@@ -12,10 +13,11 @@ CommandHandler::CommandHandler(dpp::cluster& bot_ref) : bot(bot_ref)
 
 void CommandHandler::load_commands()
 {
-    commands.reserve(3); // This has to be changed based on how many commands we have
+    commands.reserve(4); // This has to be changed based on how many commands we have
     commands.push_back(std::make_unique<PingCommand>());
     commands.push_back(std::make_unique<SetSettingsCommand>());
     commands.push_back(std::make_unique<ChallengeCreateCommand>());
+	commands.push_back(std::make_unique<ChallengeEditCommand>());
 }
 
 void CommandHandler::register_all()

@@ -5,16 +5,18 @@
 - `/ping` command
 - `/set-settings` command
 - `/challenge-create` command
+- `/challenge-edit` command
 
 ## 📌 TODO
 
-- `/challenge-edit` command
 - `/complete-challenge` command
 - `/derank` command
 - `/completed-challenge-remove` command
 - `/check-ranking` command
 - `/challenge-list` command
 - `/submit` command
+- `/challenge-create` command: update roles
+- `/challenge-edit` command: update roles
 - `/profile-stats` command
 - `/profile-challenges` command
 
