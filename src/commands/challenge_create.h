@@ -11,6 +11,7 @@
 #include <format>
 
 #include "../handlers/command_handler.h"
+#include "../utils/challenge_utils.h"
 
 using json = nlohmann::ordered_json;
 
@@ -78,12 +79,12 @@ public:
         std::string name        = std::get<std::string>(event.get_parameter("name"));
         double      rating      = std::get<double>(event.get_parameter("rating"));
         std::string description = std::get<std::string>(event.get_parameter("description"));
-        std::string url1        = normalize_url(std::get<std::string>(event.get_parameter("url1")));
+        std::string url1        = utils::challenge::normalize_url(std::get<std::string>(event.get_parameter("url1")));
         std::string url2;
         bool        has_url2    = false;
         if (auto url2_param = event.get_parameter("url2"); auto* url2_value = std::get_if<std::string>(&url2_param))
         {
-            url2     = normalize_url(*url2_value);
+            url2     = utils::challenge::normalize_url(*url2_value);
             has_url2 = true;
         }
 
@@ -103,172 +104,6 @@ public:
 
 private:
     // ─────────────────────────────────────────────────────────────────────
-    //  File helpers
-    // ─────────────────────────────────────────────────────────────────────
-
-    /** Loads a JSON file, returning an empty object on error. */
-    json load_json(const std::string& path) const
-    {
-        json j;
-        std::ifstream f(path);
-        if (f.is_open())
-        {
-            try { j = json::parse(f); }
-            catch (...) { j = json::object(); }
-            f.close();
-        }
-        else { j = json::object(); }
-        return j;
-    }
-
-    /** Saves a JSON object to file with indentation. */
-    inline bool save_json(const std::string& path, const json& j) const
-    {
-        std::ofstream f(path);
-        if (!f.is_open()) return false;
-        f << std::setw(4) << j << std::endl;
-        f.close();
-        return true;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    //  URL normalization
-    // ─────────────────────────────────────────────────────────────────────
-
-    /** Ensures the URL starts with http:// or https://, prepending https:// if missing. */
-    static std::string normalize_url(std::string_view url)
-    {
-        if (url.starts_with("http://") || url.starts_with("https://"))
-            return std::string(url);
-        return "https://" + std::string(url);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    //  Rank helpers
-    // ─────────────────────────────────────────────────────────────────────
-
-    /** Builds a mapping rank key → index (position in ranks.json). */
-    static std::unordered_map<std::string, int> build_rank_index_map(const json& ranks)
-    {
-        std::unordered_map<std::string, int> map;
-        map.reserve(ranks.size());
-        int idx = 0;
-        for (auto it = ranks.items().begin(); it != ranks.items().end(); ++it)
-            map[it.key()] = idx++;
-        return map;
-    }
-
-    /** Builds a mapping rank key → numbering prefix index (excludes grounddweller). */
-    static std::unordered_map<std::string, int> build_rank_prefix_map(const json& ranks)
-    {
-        std::unordered_map<std::string, int> map;
-        map.reserve(ranks.size());
-        int prefix = 0;
-        for (auto it = ranks.items().begin(); it != ranks.items().end(); ++it)
-            if (it.key() != "grounddweller")
-                map[it.key()] = prefix++;
-        return map;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    //  Challenge numbering & re‑ordering
-    // ─────────────────────────────────────────────────────────────────────
-
-    /**
-     * Sorts normal challenges by rank hierarchy → rating ascending,
-     * then assigns rank‑prefixed numbers (1,2,3… / 101,102… etc.).
-     *
-     * @return Mapping old number → new number.
-     */
-    std::unordered_map<int, int> reassign_normal_numbers(
-        json&                                         challenges,
-        const std::unordered_map<std::string, int>&   rank_index_map,
-        const std::unordered_map<std::string, int>&   rank_prefix_map) const
-    {
-        // Sort by rank index then rating (both ascending)
-        std::sort(challenges.begin(), challenges.end(),
-            [&](const json& a, const json& b) {
-                int idxA = rank_index_map.at(a["rank"].get<std::string>());
-                int idxB = rank_index_map.at(b["rank"].get<std::string>());
-                if (idxA != idxB) return idxA < idxB;
-                return a["rating"].get<double>() < b["rating"].get<double>();
-            });
-
-        std::unordered_map<int, int>         old_to_new;
-        old_to_new.reserve(challenges.size());
-        std::unordered_map<std::string, int> counter_per_rank;
-
-        for (auto& c : challenges)
-        {
-            std::string rank_str(c["rank"].get<std::string_view>());
-            int         old_num = c["number"].get<int>();
-            int&        counter = counter_per_rank[rank_str];
-
-            int rank_prefix = rank_prefix_map.at(rank_str);
-            int new_num     = rank_prefix * 100 + counter + 1;
-            old_to_new[old_num] = new_num;
-            c["number"]         = new_num;
-            ++counter;
-        }
-        return old_to_new;
-    }
-
-    /**
-     * Sorts bonus challenges by rating ascending, assigns sequential numbers 1,2,3…
-     *
-     * @return Mapping old number → new number.
-     */
-    std::unordered_map<int, int> reassign_bonus_numbers(json& challenges) const
-    {
-        std::sort(challenges.begin(), challenges.end(),
-            [](const json& a, const json& b) {
-                return a["rating"].get<double>() < b["rating"].get<double>();
-            });
-
-        std::unordered_map<int, int> old_to_new;
-        old_to_new.reserve(challenges.size());
-        int idx = 1;
-        for (auto& c : challenges)
-        {
-            int old_num = c["number"].get<int>();
-            c["number"] = idx;
-            old_to_new[old_num] = idx;
-            ++idx;
-        }
-        return old_to_new;
-    }
-
-    /** Remaps challenge numbers inside a player's completed/waiting arrays. */
-    void remap_player_numbers(json& player, const std::unordered_map<int, int>& mapping, bool is_bonus) const
-    {
-        auto remap_array = [&](json& arr) {
-            for (auto& item : arr)
-            {
-                auto it = mapping.find(item["number"].get<int>());
-                if (it != mapping.end())
-                    item["number"] = it->second;
-            }
-            std::sort(arr.begin(), arr.end(),
-                [](const json& a, const json& b) { return a["number"].get<int>() < b["number"].get<int>(); });
-        };
-
-        if (is_bonus)
-        {
-            if (player.contains("completedBonus"))
-                remap_array(player["completedBonus"]);
-            if (player.contains("bonusWaitingToBeRated"))
-                remap_array(player["bonusWaitingToBeRated"]);
-        }
-        else
-        {
-            if (player.contains("completedChallenges"))
-                remap_array(player["completedChallenges"]);
-            if (player.contains("challengesWaitingToBeRated"))
-                remap_array(player["challengesWaitingToBeRated"]);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
     //  Subcommand execution
     // ─────────────────────────────────────────────────────────────────────
 
@@ -277,20 +112,20 @@ private:
         std::string_view description, std::string_view url1, std::string_view url2, bool has_url2) const
     {
         // ---------- load data ----------
-        json challenges_data = load_json("data/challenges.json");
+        json challenges_data = utils::challenge::load_json("data/challenges.json");
         if (!challenges_data.contains("challenges")) challenges_data["challenges"] = json::array();
         json& challenges = challenges_data["challenges"];
 
-        json ranks = load_json("data/ranks.json");
+        json ranks = utils::challenge::load_json("data/ranks.json");
         if (ranks.empty()) return std::unexpected("❌ ranks.json not configured. Use /set-settings first.");
 
-        json players_data = load_json("data/players.json");
+        json players_data = utils::challenge::load_json("data/players.json");
         if (!players_data.contains("players")) players_data["players"] = json::array();
         json& players = players_data["players"];
 
         // ---------- pre‑compute helpers ----------
-        std::unordered_map<std::string, int> rank_index_map  = build_rank_index_map(ranks);
-        std::unordered_map<std::string, int> rank_prefix_map = build_rank_prefix_map(ranks);
+        std::unordered_map<std::string, int> rank_index_map  = utils::challenge::build_rank_index_map(ranks);
+        std::unordered_map<std::string, int> rank_prefix_map = utils::challenge::build_rank_prefix_map(ranks);
         std::size_t num_ranks = rank_index_map.size();
 
         // ---------- insert & re‑number ----------
@@ -304,7 +139,7 @@ private:
         new_challenge["url2"]          = has_url2 ? json(url2) : json(nullptr);
         challenges.push_back(std::move(new_challenge));
 
-        auto old_to_new = reassign_normal_numbers(challenges, rank_index_map, rank_prefix_map);
+        auto old_to_new = utils::challenge::reassign_normal_numbers(challenges, rank_index_map, rank_prefix_map);
 
         // ---------- update ratingNeeded (single O(C+R) pass) ----------
         std::unordered_map<std::string, double> sum_by_rank;
@@ -349,7 +184,7 @@ private:
         // ---------- update all players' ratings (preserve rank) ----------
         for (auto& player : players)
         {
-            remap_player_numbers(player, old_to_new, false);
+            utils::challenge::remap_player_numbers(player, old_to_new, false);
 
             std::string player_rank_key(player["rank"].get<std::string_view>());
             int         player_rank_idx = rank_index_map.at(player_rank_key);
@@ -396,11 +231,11 @@ private:
         ranks["airdribblegod"]["ratingNeeded"] = players.empty() ? 0.0 : players[0]["rating"].get<double>();
 
         // ---------- persist ----------
-        if (!save_json("data/challenges.json", challenges_data))
+        if (!utils::challenge::save_json("data/challenges.json", challenges_data))
             return std::unexpected("❌ Could not write challenges.json");
-        if (!save_json("data/ranks.json", ranks))
+        if (!utils::challenge::save_json("data/ranks.json", ranks))
             return std::unexpected("❌ Could not write ranks.json");
-        if (!save_json("data/players.json", players_data))
+        if (!utils::challenge::save_json("data/players.json", players_data))
             return std::unexpected("❌ Could not write players.json");
 
         int new_number = old_to_new.at(-1);
@@ -430,11 +265,11 @@ private:
         std::string_view name, double rating,
         std::string_view description, std::string_view url1, std::string_view url2, bool has_url2) const
     {
-        json bonus_data = load_json("data/bonus.json");
+        json bonus_data = utils::challenge::load_json("data/bonus.json");
         if (!bonus_data.contains("challenges")) bonus_data["challenges"] = json::array();
         json& challenges = bonus_data["challenges"];
 
-        json players_data = load_json("data/players.json");
+        json players_data = utils::challenge::load_json("data/players.json");
         if (!players_data.contains("players")) players_data["players"] = json::array();
         json& players = players_data["players"];
 
@@ -447,7 +282,7 @@ private:
         new_challenge["url2"]          = has_url2 ? json(url2) : json(nullptr);
         challenges.push_back(std::move(new_challenge));
 
-        auto old_to_new = reassign_bonus_numbers(challenges);
+        auto old_to_new = utils::challenge::reassign_bonus_numbers(challenges);
 
         std::unordered_map<int, double> bonus_rating_by_number;
         bonus_rating_by_number.reserve(challenges.size());
@@ -456,7 +291,7 @@ private:
 
         for (auto& player : players)
         {
-            remap_player_numbers(player, old_to_new, true);
+            utils::challenge::remap_player_numbers(player, old_to_new, true);
 
             double total_bonus = 0.0;
             if (player.contains("completedBonus"))
@@ -471,9 +306,9 @@ private:
             player["bonusRating"] = total_bonus;
         }    
 
-        if (!save_json("data/bonus.json", bonus_data))
+        if (!utils::challenge::save_json("data/bonus.json", bonus_data))
             return std::unexpected("❌ Could not write bonus.json");
-        if (!save_json("data/players.json", players_data))
+        if (!utils::challenge::save_json("data/players.json", players_data))
             return std::unexpected("❌ Could not write players.json");
 
         int new_number = old_to_new.at(-1);
