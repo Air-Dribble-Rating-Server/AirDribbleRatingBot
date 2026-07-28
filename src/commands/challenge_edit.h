@@ -316,9 +316,10 @@ private:
         dpp::embed embed;
         embed.set_title("✅ Challenge edited")
             .set_color(0xFFD700)
-            .add_field("Number", std::format("{:03}", new_number), true)
             .add_field("Name", edited_it->at("challengeName").get<std::string>(), true)
+            .add_field("Bonus", "No", true)
             .add_field("Rank", ranks[edited_it->at("rank").get<std::string>()]["name"].get<std::string>(), true)
+            .add_field("Number", std::format("{:03}", new_number), true)
             .add_field("Rating", std::to_string(static_cast<int>(edited_it->at("rating").get<double>())), true)
             .add_field("Description", edited_it->at("description").get<std::string>())
             .add_field("URL 1", edited_it->at("url1").get<std::string>())
@@ -441,6 +442,7 @@ private:
         embed.set_title("🗑️ Challenge deleted")
             .set_color(0xFF0000)
             .add_field("Number", std::format("{:03}", number), true)
+            .add_field("Bonus", "No", true)
             .add_field("Status", "Deleted successfully", true);
         dpp::message msg;
         msg.add_embed(embed);
@@ -519,8 +521,9 @@ private:
         dpp::embed embed;
         embed.set_title("✅ Bonus challenge edited")
             .set_color(0xFFD700)
-            .add_field("Number", std::format("{:03}", new_number), true)
             .add_field("Name", edited_it->at("challengeName").get<std::string>(), true)
+            .add_field("Bonus", "Yes", true)
+            .add_field("Number", std::format("{:03}", new_number), true)
             .add_field("Rating", std::to_string(static_cast<int>(edited_it->at("rating").get<double>())), true)
             .add_field("Description", edited_it->at("description").get<std::string>())
             .add_field("URL 1", edited_it->at("url1").get<std::string>())
@@ -589,6 +592,7 @@ private:
         embed.set_title("🗑️ Bonus challenge deleted")
             .set_color(0xFF0000)
             .add_field("Number", std::format("{:03}", number), true)
+            .add_field("Bonus", "Yes", true)
             .add_field("Status", "Deleted successfully", true);
         dpp::message msg;
         msg.add_embed(embed);

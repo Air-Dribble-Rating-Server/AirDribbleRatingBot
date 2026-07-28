@@ -43,19 +43,19 @@
     },
     "legend": {
         "name": "Legend",
-        "ratingNeeded": 27.5,
+        "ratingNeeded": 253.0,
         "roleID": null,
         "players": []
     },
     "mythic": {
         "name": "Mythic",
-        "ratingNeeded": 357.5,
+        "ratingNeeded": 583.0,
         "roleID": null,
         "players": []
     },
     "demigod": {
         "name": "Demigod",
-        "ratingNeeded": 357.5,
+        "ratingNeeded": 583.0,
         "roleID": null,
         "players": []
     },
