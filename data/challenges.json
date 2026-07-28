@@ -8,6 +8,15 @@
             "description": "agaw",
             "url1": "https://aswwghaw",
             "url2": "https://youtube.com"
+        },
+        {
+            "challengeName": "Testing challenge",
+            "rank": "mythic",
+            "number": 701,
+            "rating": 300.0,
+            "description": "Really good testing challenge",
+            "url1": "https://youtube.com",
+            "url2": "https://youtu.be"
         }
     ]
 }
